@@ -36,7 +36,7 @@ class SpamForm extends Model
 								'whenClient'=>'function(attr, val){return $("#spamform-messagesource").val()=="html";}',
 						],
             [['prefixFile', 'rootFile'], 'file', 'extensions'=>'txt'], 
-            [['prefixFile', 'rootFile'], 'required', 
+            [['prefixFile'], 'required', 
 						    'when'=>function(){
 									return $this->messageSource == 'yandex';
 								},
@@ -71,8 +71,8 @@ class SpamForm extends Model
             'messageFrom' => 'From:',
             'messageTemplate' => 'Шаблон сообщения',
             'segmentSource' => 'Сегмент емайл адресов',
-            'prefixFile' => 'Префикс к поисковому запросу',
-            'rootFile' => 'Поисковый запрос',
+            'prefixFile' => 'Основной поисковый запрос (список тем писем)',
+            'rootFile' => 'Дополнительный текст, прибавляемый к каждому поисковому запросу',
             'handleUrl' => 'Адрес сервера обработки',
             'subId' => 'Уникальный идентификатор рассылки для дальнейшего отслеживания',
         ];

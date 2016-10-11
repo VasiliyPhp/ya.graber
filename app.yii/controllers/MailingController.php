@@ -68,7 +68,9 @@ class MailingController extends Controller
 	private function createMessageProvider($data) {
 		switch( $data->messageSource) {
 		case 'yandex' : 
-			$message = new \app\common\YandexMessageProvider($data->prefixFile->tempName, $data->rootFile->tempName, $data->messageTemplate); break;
+			$root = isset($data->rootFile->tempName) ? $data->rootFile->tempName : null;
+			$prefix = isset($data->prefixFile->tempName) ? $data->prefixFile->tempName : null;
+			$message = new \app\common\YandexMessageProvider($prefix, $root, $data->messageTemplate); break;
 		case 'html' : 
 		  $message = new \app\common\HtmlMessageProvider($data->messageSubject, $data->messageTemplate); break;
 		default : 

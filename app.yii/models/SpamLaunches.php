@@ -32,7 +32,7 @@ class SpamLaunches extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['launch_date, segment'], 'safe'],
+            [['launch_date', 'segment'], 'safe'],
             [['total_sending', 'bad_sending', 'segment_id'], 'integer']
         ];
     }

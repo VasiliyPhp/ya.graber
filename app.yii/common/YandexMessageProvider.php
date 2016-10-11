@@ -24,18 +24,18 @@ class YandexMessageProvider{
 		$this->cSuf = $this->suf ? 
 		  count($this->suf) :
 			null;
-		$this->currentIndex = mt_rand(0, $this->cPref * $this->cSuf );
+		$this->currentIndex = $this->cSuf ? mt_rand(0, $this->cPref * $this->cSuf ) : mt_rand( 0, $this->cPref );
 	}
 	
 	function next () {
 		$index = &$this->currentIndex;
 		
-		$suf = ($this->cSuf  + $index ) % $this->cSuf;
+		$pref = $this->cSuf ? (((int) ($index / $this->cSuf)) % $this->cPref) : ((int) ($index / $this->cPref)) % $this->cPref;
 		
-		$pref = ((int) ($index / $this->cSuf)) % $this->cPref;
+		$suf = $this->cSuf? (($this->cSuf  + $index ) % $this->cSuf) : null;
 		
-		$subject = $query = $this->pref[$pref] . ' ' . $this->suf[$suf];
-		
+		$subject = $query = $suf ? $this->pref[$pref] . ' ' . $this->suf[$suf] : $this->pref[$pref];
+		// j([$index, $pref,$suf, $subject]);
 		$next = $this->api($query);
 		
 		if(!$next){
@@ -73,7 +73,7 @@ class YandexMessageProvider{
 	}
 	
 	function load($file){
-		return file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+		return is_file($file) ? file($file, FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES) : null;
 	}
 }
 

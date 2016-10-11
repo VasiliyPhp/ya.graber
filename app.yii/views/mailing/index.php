@@ -21,8 +21,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $form->field($model, 'subId'); ?>
     </div>
  		<div class='col-xs-3  switched-for' id='for-yandex' >
-        <?= $form->field($model, 'prefixFile')->fileInput() ?>
-        <?= $form->field($model, 'rootFile')->fileInput() ?>
+        <?= $form->field($model, 'prefixFile')->fileInput(['accept'=>'.txt']) ?>
+        <?= $form->field($model, 'rootFile')->fileInput(['accept'=>'.txt']) ?>
 		</div>
  		<div class='col-xs-3  switched-for' id='for-html' >
         <?= $form->field($model, 'messageSubject') ?>
