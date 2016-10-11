@@ -231,6 +231,23 @@ class MailingController extends Controller
 		return $this->render('stat', compact('dataProvider', 'by'));
 		
 	}
+	
+	// looking Results of spam sending
+	public function actionSendedStat () {
+		$ar = \app\models\SpamLaunches::sendedStat();
+		
+		// exit(l($ar));
+		$dataProvider = new ActiveDataProvider([
+		  'query' => $ar,
+			'pagination'=>[
+			  'pagesize'=>30,
+			],
+		]);
+		
+		
+		return $this->render('sended-stat', compact('dataProvider'));
+		
+	}
 
 	/**
 	 * Finds the SpamLaunches model based on its primary key value.

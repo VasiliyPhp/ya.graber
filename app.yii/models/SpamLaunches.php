@@ -3,7 +3,7 @@
 namespace app\models;
 
 use Yii;
-
+use yii\db\Query;
 /**
  * This is the model class for table "spam_launches".
  *
@@ -32,7 +32,7 @@ class SpamLaunches extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['launch_date'], 'safe'],
+            [['launch_date, segment'], 'safe'],
             [['total_sending', 'bad_sending', 'segment_id'], 'integer']
         ];
     }
@@ -45,6 +45,7 @@ class SpamLaunches extends \yii\db\ActiveRecord
         return [
             'launch_id' => 'Launch ID',
             'segment_id' => 'Segment ID',
+            'segment' => 'Сегмент',
             'launch_date' => 'Время запуска рассылки',
             'total_sending' => 'Отправлено писем за рассылку',
             'bad_sending' => 'Количество неотправленных писем за рассылку',
@@ -115,6 +116,20 @@ class SpamLaunches extends \yii\db\ActiveRecord
 				// j($aq);
 				// exit;
 			return $aq;
+		}
+		
+		public static function sendedStat(){
+			 
+			$aq = static::find()
+			  ->select([
+				  'launch_date',
+					'total_sending',
+					'bad_sending',
+					'segment',
+				])
+				->innerJoin('segment','segment.segment_id = spam_launches.segment_id')
+				->orderBy('launch_date desc');
+				return $aq;
 		}
 		
 }
