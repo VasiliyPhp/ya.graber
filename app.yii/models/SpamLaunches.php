@@ -59,7 +59,7 @@ class SpamLaunches extends \yii\db\ActiveRecord
 		
 		public function markAsBad($email){
 			$this->increaseBadSending(1);
-			\app\models\Email::updateAll(['sended'=>1],"email='$email'");
+			\app\models\Email::updateAll(['sended'=>1],"segment_id=$seg_id and email='$email'");
 		}
 		
 		public function increase($quantity = 1){
@@ -71,8 +71,8 @@ class SpamLaunches extends \yii\db\ActiveRecord
 		}
 		
 		public function markAsSent($email){
-
-		\app\models\Email::updateAll(['sended'=>1],"email='$email'");
+		$seg_id = $this->segment_id;
+		\app\models\Email::updateAll(['sended'=>1],"segment_id=$seg_id and email='$email'");
 
       // $email = \app\models\Email::findOne(['email'=>$email]);
 			// if(!$email){

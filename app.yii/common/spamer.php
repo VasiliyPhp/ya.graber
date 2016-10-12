@@ -181,7 +181,7 @@ class Spamer extends \yii\base\Object {
 							// j([$email, $this->emailProvider]);
 							$mailer->sendMessage($tmp, $invalidEmails);						
 							$l("<span style='color:green'>".memory_get_usage()." accaunt <b>$smtp_user</b>, получатель <b>$email</b>, тема письма <b>{$this->subject}</b></span>");
-							$this->logger->markAsSent($email);
+							$this->logger->markAsSent($email, $this->emailProvider);
 							$this->logger->increase();
 							// @unset($tmp, $mailer, $smtp, $message, $body);
 							usleep($this->delay * 1000);

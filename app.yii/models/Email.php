@@ -61,6 +61,7 @@ class Email extends \yii\db\ActiveRecord
 			return $this->getEmailsBySegmentId()
 			      ->select('count(*) c')
 						->andWhere('sended = 0')
+						->andWhere('unsubscribed = 0')
 						->count()
 						;
 			
@@ -77,7 +78,7 @@ class Email extends \yii\db\ActiveRecord
 		public function setSegmentId($sid){
 			$this->segmentId = $sid;
 		}
-		
+	
 		public function getSegmentId(){
 			return $this->segmentId;
 		}
@@ -86,7 +87,7 @@ class Email extends \yii\db\ActiveRecord
 		  return $this->getEmailsBySegmentId()
 						->andWhere('sended = 0')
 						->andWhere('unsubscribed = 0')
-						->orderBy('Rand()')
+						// ->orderBy('Rand()')
 						->one();
 			
 		}
@@ -99,10 +100,10 @@ class Email extends \yii\db\ActiveRecord
 		
 		public function getEmailsBySegmentId(){
 			$selfTable = self::tableName();
-			$segmentTable = Segment::tableName();
+			// $segmentTable = Segment::tableName();
 			$aq = self::find()
-			       ->innerJoin($segmentTable, "$selfTable.segment_id = $segmentTable.segment_id")
-						 ->andWhere(["$segmentTable.segment_id"=>$this->segmentId])
+			       // ->innerJoin($segmentTable, "$selfTable.segment_id = $segmentTable.segment_id")
+						 ->andWhere(["$selfTable.segment_id"=>$this->segmentId])
 						 ;
 			return $aq;
 		}
