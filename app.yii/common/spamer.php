@@ -208,7 +208,7 @@ class Spamer extends \yii\base\Object {
 								$smtp->markAsBan($code, $errmsg);
 							}
 							else{
-								mt_rand(0, 4) or $smtp->markAsBan($code, $errmsg);
+								mt_rand(0, 2) or $smtp->markAsBan($code, $errmsg);
 							}
 						}
 					}
