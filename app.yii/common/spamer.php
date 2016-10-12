@@ -140,7 +140,9 @@ class Spamer extends \yii\base\Object {
 						if(!($message = $this->messageProvider->next())){
 							throw new \Exception('Не удалось получить сообщение из <b>MessageProvider::next()</b>');
 						}
+						// $l('before getting email, limit - '. $limit);
 						$this->email = $email = $emailProvider->next()->email;
+						// $l('after getting email');
 						if(!(new \yii\validators\EmailValidator())->validate($email)){
 							$l("<span style='color:red'>Некорректный емайл - $email</span>");
 							$emailProvider->deleteItemByEmail($email);
@@ -210,6 +212,7 @@ class Spamer extends \yii\base\Object {
 							else{
 								mt_rand(0, 2) or $smtp->markAsBan($code, $errmsg);
 							}
+							break;
 						}
 					}
 					
