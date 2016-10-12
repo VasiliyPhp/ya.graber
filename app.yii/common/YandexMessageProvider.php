@@ -11,7 +11,7 @@ class YandexMessageProvider{
 	private $body;
 	private $subject;
 	private $currentIndex = 0;
-	private static $maxFailureCount = 10;
+	private static $maxFailureCount = 3;
 	private static $failureCount = 0;
 	
 	function __construct ( $prefFile, $sufFile, $messBody ) {

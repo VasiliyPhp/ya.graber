@@ -3,6 +3,7 @@ namespace app\common;
 use app\common\helper;
 
 class Spamer extends \yii\base\Object {
+	const COOL_TIME = 30;
 	private $messageProvider;
 	private $emailProvider;
 	private $smtpProvider;
@@ -18,7 +19,8 @@ class Spamer extends \yii\base\Object {
 	public $handlerUrl;
 	public $subId;
 	public $flag;
-	
+	private $atemptCountBeforeStop = 20;
+	private $remainsAtempt;
 	function setSmtpProvider ($smtpp) {
 		$this->smtpProvider = $smtpp;
 		return $this;
@@ -65,7 +67,9 @@ class Spamer extends \yii\base\Object {
 		      sprintf("<img src='%simage.png%s' />", $this->handlerUrl, $this->getEmailUrlParams() ) :
 					 null;
 	}
-	
+	private function resetAtemptCount(){
+		$this->remainsAtempt = $this->atemptCountBeforeStop;
+	}
 	protected function pasteUnsuscribeImage(){
 		$img = $this->getUnsubscribeImg();
 		$arrayMsg = explode(' ', $this->body);
@@ -97,6 +101,7 @@ class Spamer extends \yii\base\Object {
 	
 	function run() {
 		touch($this->flag);
+		$this->resetAtemptCount();
 		try{
 			$l = function ($m){ helper::l($m); };
 			$valid = is_object($this->smtpProvider) &&
@@ -133,16 +138,19 @@ class Spamer extends \yii\base\Object {
 					$mailer->setTransport($transport);
 					// $l($mailer->getTransport()); exit;
 					$limit = min($this->atonce, $remains, ($smtp->smtp_limit_per_day - $smtp->already_sent));
-					// $limit = 1;
-					$invalidEmails = [];
+					$email_array = $emailProvider->next($limit);
+					$limit = min($limit, count($email_array));
+					// $l($limit);
+ 					$invalidEmails = [];
 					for($i = 0; $i < $limit; $i++){
-						// $tmp = $email = null;
+					  $email = $this->email = $email_array[$i]->email;
 						if(!($message = $this->messageProvider->next())){
 							throw new \Exception('Не удалось получить сообщение из <b>MessageProvider::next()</b>');
 						}
-						// $l('before getting email, limit - '. $limit);
-						$this->email = $email = $emailProvider->next()->email;
-						// $l('after getting email');
+						if(mt_rand(0, 30)){
+							$l(sprintf('Остываем %s секунд'), self::COOL_TIME);
+							sleep(self::COOL_TIME)
+						}
 						if(!(new \yii\validators\EmailValidator())->validate($email)){
 							$l("<span style='color:red'>Некорректный емайл - $email</span>");
 							$emailProvider->deleteItemByEmail($email);
@@ -180,12 +188,17 @@ class Spamer extends \yii\base\Object {
 							$smtp->increase();
 							// j([$email, $this->emailProvider]);
 							$mailer->sendMessage($tmp, $invalidEmails);						
-							$l("<span style='color:green'>".memory_get_usage()." accaunt <b>$smtp_user</b>, получатель <b>$email</b>, тема письма <b>{$this->subject}</b></span>");
-							$this->logger->markAsSent($email, $this->emailProvider);
+							$l("ящиков:<b> $remains</b>, <span style='color:green'>".memory_get_usage()." from: <b>$smtp_user</b>, to: <b>$email</b>, theme: <b>{$this->subject}</b></span>");
+							$this->logger->markAsSent($email);
+							$this->resetAtemptCount();
 							$this->logger->increase();
 							// @unset($tmp, $mailer, $smtp, $message, $body);
 							usleep($this->delay * 1000);
 						} catch (\Swift_SwiftException $swiftTrEx){
+							$this->remainsAtempt -= 1;
+							if(!$this->remainsAtempt){
+								throw new SpamerException("Обсолютный бан после " . $this->atemptCountBeforeStop . " попыток");
+							}
 							$code = $swiftTrEx->getCode() ? : 999;
 							switch($code){
 								case 999 : ;
@@ -196,16 +209,18 @@ class Spamer extends \yii\base\Object {
 								case 450 : 
 									$errmsg = 'Закончился лимит отправок в сутки'; break;
 								case 550 :
-									$errmsg = 'Почтовый сервер запретил исходящую почту из-за большой активности'; break;
+					    		$emailProvider->deleteItemByEmail($email);
+									$errmsg = sprintf('Hard-bounce - %s', 'ящик недоступен'); break;
 								default :
+					    		$this->logger->markAsSent($email);
 									$errmsg = $swiftTrEx->getMessage();
-							}			
-							$l("<span style='color:red'>".memory_get_usage()." "
-									. "accaunt: " .  $mailer->getTransport()->getExtensionHandlers()[0]->getUsername() . ", "
-									. "тема: " . $tmp->getSubject() . ", "
+							}
+							$l($this->remainsAtempt . " попыток осталось. <span style='color:red'>".memory_get_usage()." "
+									. "from: " .  $mailer->getTransport()->getExtensionHandlers()[0]->getUsername() . ", "
+									. "theme: " . $tmp->getSubject() . ", "
 									. "to: " . $email . ", "
 									. "ERROR: " .  $code . ' - ' . $errmsg . "</span>"
-								);		
+								);
 							if( in_array($code,  [999, 450, 550, 553])){
 								$smtp->markAsBan($code, $errmsg);
 							}
@@ -227,11 +242,13 @@ class Spamer extends \yii\base\Object {
 			throw new SpamerException( $e->getMessage() );
 		} catch (\Exception $e){
 			file_exists($this->flag) and unlink($this->flag);
-			j($e);
-			echo $m = $e->getMessage();
-			throw new \Exception($m);
+			// j($e);
+			$m = $e->getMessage() . '<br/>';
+			// trigger_error($m);
+			throw new \yii\base\ErrorException($e);
+			return false;
 			/**************†***************‡
-			‡ УБЕРИ РЕЖИМ ОТЛАДКИ ЧТОБЫ НЕ БЫЛО ОШИБОК ИЗЗА НЕХВАТКИ ПАМЯТИ!!!!!!!!!!
+			‡ УБЕРИ РЕЖИМ ОТЛАДКИ ЧТОБЫ НЕ БЫЛО ОШИБОК ИЗ-ЗА НЕХВАТКИ ПАМЯТИ!!!!!!!!!!
 			†*********************************/
 		}
 		file_exists($this->flag) and unlink($this->flag);
