@@ -143,7 +143,7 @@ class Spamer extends \yii\base\Object {
 					// $l($limit);
  					$invalidEmails = [];
 					for($i = 0; $i < $limit; $i++){
-					  $email = $this->email = $email_array[$i]->email;
+					  $email = $this->email = $email_array[$i]['email'];
 						if(!($message = $this->messageProvider->next())){
 							throw new \Exception('Не удалось получить сообщение из <b>MessageProvider::next()</b>');
 						}
@@ -188,8 +188,8 @@ class Spamer extends \yii\base\Object {
 							$smtp->increase();
 							// j([$email, $this->emailProvider]);
 							$mailer->sendMessage($tmp, $invalidEmails);						
-							$l("ящиков:<b> $remains</b>, <span style='color:green'>".memory_get_usage()." from: <b>$smtp_user</b>, to: <b>$email</b>, theme: <b>{$this->subject}</b></span>");
 							$this->logger->markAsSent($email);
+							$l("ящиков:<b> $remains</b>, <span style='color:green'>".memory_get_usage()." from: <b>$smtp_user</b>, to: <b>$email</b>, theme: <b>{$this->subject}</b></span>");
 							$this->resetAtemptCount();
 							$this->logger->increase();
 							// @unset($tmp, $mailer, $smtp, $message, $body);

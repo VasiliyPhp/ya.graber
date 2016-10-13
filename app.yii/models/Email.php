@@ -84,13 +84,18 @@ class Email extends \yii\db\ActiveRecord
 		}
 		
 		public function next($quantity = 1){
-		  return $this->getEmailsBySegmentId()
+		  $sub = $this->getEmailsBySegmentId()
 						->select('email')
 						->andWhere('sended = 0')
 						->andWhere('unsubscribed = 0')
 						// ->orderBy('Rand()')
-						->limit($quantity)
-						->all();
+						->limit($quantity);
+			$query = (new \yii\db\Query)
+				->from(['em'=>$sub])
+				->select('em.email')
+				->orderBy('rand()')
+				->all();
+				return $query;
 			
 		}
 		
