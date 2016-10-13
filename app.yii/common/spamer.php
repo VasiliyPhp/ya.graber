@@ -147,9 +147,9 @@ class Spamer extends \yii\base\Object {
 						if(!($message = $this->messageProvider->next())){
 							throw new \Exception('Не удалось получить сообщение из <b>MessageProvider::next()</b>');
 						}
-						if(mt_rand(0, 30)){
-							$l(sprintf('Остываем %s секунд'), self::COOL_TIME);
-							sleep(self::COOL_TIME)
+						if(!mt_rand(0, 30)){
+							$l(sprintf('Остываем %s секунд', self::COOL_TIME));
+							sleep(self::COOL_TIME);
 						}
 						if(!(new \yii\validators\EmailValidator())->validate($email)){
 							$l("<span style='color:red'>Некорректный емайл - $email</span>");
