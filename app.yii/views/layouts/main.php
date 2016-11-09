@@ -53,6 +53,7 @@ AppAsset::register($this);
 									 ['label' => 'Статистика запусков', 'url' => ['/mailing/sended-stat']],
 									 ['label' => 'СМТП сервера', 'url' => ['/smtp/index']],
 									 ['label' => 'Настойки рассылок', 'url' => ['/mailing/spam-configuration']],
+									 ['label' => 'Проверить аккаунт', 'url' => ['/mailing/test']],
 									], 
 							],[
 									'label'=>'Выйти',

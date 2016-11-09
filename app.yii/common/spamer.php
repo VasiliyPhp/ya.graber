@@ -135,6 +135,7 @@ class Spamer extends \yii\base\Object {
 					];
 					$mailer = new \yii\swiftmailer\Mailer;
 					$transport = $mailer->createTransport($mailerConfig);
+			/*  $transport->setLocalDomain('example.com') */
 					$mailer->setTransport($transport);
 					// $l($mailer->getTransport()); exit;
 					$limit = min($this->atonce, $remains, ($smtp->smtp_limit_per_day - $smtp->already_sent));

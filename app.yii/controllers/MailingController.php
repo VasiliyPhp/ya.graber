@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\common\spamer;
 use app\models\smtp;
 use app\models\SpamForm;
+use app\models\TestForm;
 use app\models\SpamConfiguration;
 use yii\web\controller;
 use yii\filters\AccessControl;
@@ -42,27 +43,58 @@ class MailingController extends Controller
         ];
    }
 	public function actionTest(){
-		$mailer = \yii::$app->mailer;
-		$transport = [
-		         'class' => 'Swift_SmtpTransport',
-             'host' => 'smtp.yandex.ru',  // e.g. smtp.mandrillapp.com or smtp.gmail.com
-             'username' => 'autosib.rst@yandex.ru',
-             'password' => '2146063q',
-             'port' => '465', // Port 25 is a very common port too
-             'encryption' => 'ssl'
-		];
-		try{
-			$mailer->setTransport($mailer->createTransport($transport));
-			echo $mailer->compose()
-			->setHtmlBody('my owner body')
-			->setReturnPath('autosib.rst@yandex.ru')
-			->setSubject('my subject')
-			->setTo('mister.sergeew-v@yandex.ru')
-			->setFrom('mister.president@obama.gov')
-			->send();
-		}catch(\Exception $e){
-			echo $e->getMessage();
+		$model = new TestForm;
+		$res = null;
+		$error = null;
+		if($model->load(yii::$app->request->post()) and $model->validate()){
+			$smtp = Smtp::find()->where(['smtp_id'=>$model->smtp])->asArray()->one();
+			extract($smtp);
+			$transport = [
+							 'class' => 'Swift_SmtpTransport',
+							 'host' => $smtp_host,  // e.g. smtp.mandrillapp.com or smtp.gmail.com
+							 'username' => $smtp_user,
+							 'password' => $smtp_pass,
+							 'port' => $smtp_port, // Port 25 is a very common port too
+							 'encryption' => $smtp_protocol,
+			];
+			$mailer = new \yii\swiftmailer\Mailer;
+			$transport = $mailer->createTransport($transport);
+			$transport->setLocalDomain($smtp_host);
+			// $transport->setLocalDomain('localhost');
+      $mailer->setTransport($transport);
+			try{
+				$message = $mailer->compose();
+				$privKeyFile = yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp_host . '.pem';
+				$selectorFile = yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp_host . '.key';
+				if(file_exists($privKeyFile)){
+					$privateKey = file_get_contents($privKeyFile);
+					$selector = file_get_contents($selectorFile);
+					$signer = new \Swift_Signers_DKIMSigner($privateKey, $smtp_host, $selector);
+					$signer->ignoreHeader('Return-Path');
+					$message->getSwiftMessage()->attachSigner($signer);
+				}
+				$message
+				  ->setReturnPath($model->from ? : $smtp_user)
+					->setReadReceiptTo($model->from ? : $smtp_user)
+					->setTo($model->to)
+					->setFrom($model->from ? : $smtp_user)
+					// ->setTo('mister.sergeew-v@yandex.ru')
+					->setHtmlBody($model->body)
+					->setSubject($model->theme);
+				
+				$res = $message->send();
+			// j($mailer);
+			}catch(\Exception $e){
+				$error = $e->getMessage();
+			}
 		}
+		$smtp = Smtp::find()
+			->select('smtp_user')
+     	->where(['is_banned'=>[0, null]])
+		  ->andWhere('already_sent < smtp_limit_per_day')
+			->indexBy('smtp_id')
+			->column();
+		return $this->render('test', compact('model', 'smtp', 'res', 'error'));
 	}
 	
 	private function createMessageProvider($data) {

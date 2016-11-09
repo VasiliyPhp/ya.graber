@@ -1,11 +1,10 @@
 <?php
 
 // comment out the following two lines when deployed to production
-// defined('YII_DEBUG') or define('YII_DEBUG', true);
-// defined('YII_ENV') or define('YII_ENV', 'dev');
-
+defined('YII_DEBUG') or define('YII_DEBUG', true);
+defined('YII_ENV') or define('YII_ENV', 'dev');
+// set_time_limit(5);exit(file_get_contents('http://info.dostavkaperedach.ru:25'));
 set_time_limit(0);
-
 require(__DIR__ . '/../vk.photos1/app.yii/vendor/autoload.php');
 require(__DIR__ . '/../vk.photos1/app.yii/vendor/yiisoft/yii2/Yii.php');
 
