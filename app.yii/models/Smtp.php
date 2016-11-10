@@ -103,16 +103,11 @@ class Smtp extends \yii\db\ActiveRecord
 			self::checkState();
 			
 			$smtp = self::find()
+							->select('*, (smtp_limit_per_day-already_sent)*floor((rand()*(1000-1))+1) as rand')
 							->where(['is_banned'=>0])
 							->orWhere(['is_banned'=>null])
-							->andWhere(['or', 
-							  'already_sent < smtp_limit_per_day', 
-								['or', 
-								  'first_run_date is null', 
-									'from_unixtime(first_run_date, "%Y%m%d") < '.date('Ymd')
-								]
-							])
-							->orderBy('last_run_date')
+							->andWhere('smtp_limit_per_day > already_sent or already_sent is null')
+							->orderBy('rand desc')
 							->one()
 							;
 			// exit(print_r($smtp));

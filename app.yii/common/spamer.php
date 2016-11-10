@@ -135,7 +135,7 @@ class Spamer extends \yii\base\Object {
 					];
 					$mailer = new \yii\swiftmailer\Mailer;
 					$transport = $mailer->createTransport($mailerConfig);
-			/*  $transport->setLocalDomain('example.com') */
+			    $transport->setLocalDomain($smtp->smtp_host);
 					$mailer->setTransport($transport);
 					// $l($mailer->getTransport()); exit;
 					$limit = min($this->atonce, $remains, ($smtp->smtp_limit_per_day - $smtp->already_sent));
@@ -159,6 +159,15 @@ class Spamer extends \yii\base\Object {
 							continue;
 						}
 						$tmp = $mailer->compose();
+						$privKeyFile = \yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp->smtp_host . '.pem';
+						$selectorFile = \yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp->smtp_host . '.key';
+						if(file_exists($privKeyFile)){
+							$privateKey = file_get_contents($privKeyFile);
+							$selector = file_get_contents($selectorFile);
+							$signer = new \Swift_Signers_DKIMSigner($privateKey, $smtp->smtp_host, $selector);
+							$signer->ignoreHeader('Return-Path');
+							$tmp->getSwiftMessage()->attachSigner($signer);
+						}
 						$this->subject = $message['subject'];
 						$this->uId = $tmp->getMessageId();
 						$this->body = $message['body'];
