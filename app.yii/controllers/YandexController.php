@@ -79,6 +79,7 @@ class YandexController extends \yii\web\Controller{
 	public function actionImport(){
 	  $model = new \app\models\ImportForm();
 		if ( $model->load(\yii::$app->request->post()) and $model->validate() )	{
+			session_write_close();
 			$success = $model->import() ? true : false;
 		}
 		
@@ -94,6 +95,7 @@ class YandexController extends \yii\web\Controller{
 	
 	public function actionExport() {
 		if ( isset(Yii::$app->request->post()['sid'], Yii::$app->request->post()['format']) )	{
+			session_write_close();
 			return $this->export(Yii::$app->request->post()['sid'], Yii::$app->request->post()['format']);
 		}
 		$collection = new ActiveDataProvider([
@@ -206,9 +208,9 @@ class YandexController extends \yii\web\Controller{
 			$query = new Query;
 			$segmentItems = new ArrayDataProvider([
 					'allModels' => $query
-					  ->select('segment.segment_id, count(segment.segment_id) c, concat_ws("  ", segment, count(segment.segment_id)) seg')
+					  ->select('segment.segment_id, count(segment.segment_id) c, concat_ws("  ", segment, count(email.email)) seg')
 						->from('segment')
-						->innerJoin('email', 'email.segment_id = segment.segment_id')
+						->leftJoin('email', 'email.segment_id = segment.segment_id')
 						->groupBy('segment.segment_id')
 						->orderBy('c desc')
 						->all(),

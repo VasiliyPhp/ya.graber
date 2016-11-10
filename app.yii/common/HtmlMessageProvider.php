@@ -22,20 +22,22 @@ class HtmlMessageProvider{
 		$this->cTemplateSubject = $this->templateSubject ? 
 		  count($this->templateSubject) :
 			null;
-			
 	}
-	
+	function get_random($matches){
+		$matches = explode('|', $matches[1]);
+		return $matches[array_rand($matches)];
+	}
 	function next () {
 		$index = &$this->currentIndex;
 		if($this->cTemplateBody){
 		  $bIndex = ($this->cTemplateBody + $index) % $this->cTemplateBody;
-	    $body = preg_replace('~{.+}~', $this->templateBody[$bIndex], $this->body);
+	    $body = preg_replace_callback('~{(.+)}~U', [$this, 'get_random'], $this->body);
 		} else{
 	    $body = $this->body;
 		}
 		if($this->cTemplateSubject){
 	    $sIndex = ($this->cTemplateSubject + $index) % $this->cTemplateSubject;
-		  $subject = preg_replace('~{.+}~', $this->templateSubject[$sIndex], $this->subject);
+		  $subject = preg_replace_callback('~{(.+)}~U', [$this, 'get_random'], $this->subject);
 		} else {
 			$subject = $this->subject;
 		}
