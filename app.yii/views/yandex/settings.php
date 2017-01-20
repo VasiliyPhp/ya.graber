@@ -82,10 +82,10 @@ $this->params['breadcrumbs'][] = $this->title;
 															],
 															[
 																'class'=>yii\grid\ActionColumn::className(),
-																'template'=>'{delete}{clear}',
+																'template'=>'{delete} {clear}',
 																'buttons'=>[
 																  'clear'=>function($url, $model){
-																  	return Html::a('<span class="glyphicon glyphicon-erase"></span>', ['yandex/clear-segment', 'segment_id'=>$model['segment_id']]);
+																  	return Html::a('<span class="glyphicon glyphicon-erase"></span>', ['yandex/clear-segment', 'segment_id'=>$model['segment_id']],['title'=>'Сбросить отправленные емайлы']);
 																	},
 																],
 																'urlCreator'=>function($action, $model){

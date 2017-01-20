@@ -49,7 +49,7 @@ $('#delete_email_btn').click(function(){
                     <?= $form->field($queryForm, 'segment')->dropDownList($segmentItems) ?>
              </div>
            <div class="col-lg-4">
-                     <?= $form->field($queryForm, 'query') ?>
+                     <?= $form->field($queryForm, 'query')->textarea(['style'=>'resize:none']) ?>
              </div>
            <div class="col-lg-4">
                     <?= $form->field($queryForm, 'amount')->textInput(['type'=>'number'])?>
@@ -77,7 +77,7 @@ $('#delete_email_btn').click(function(){
 		  <input type=email class=form-control id="delete_email_input">
 		</div>
 	  <div class='form-group'>
-		  <button class='btn brtn-warning ' id="delete_email_btn">Удалить эмайл</button>
+		  <button class='btn btn-warning ' id="delete_email_btn">Удалить эмайл</button>
 		</div>
 	</div>
 </div>
