@@ -125,6 +125,9 @@ class MailingController extends Controller
 			$config['from'] = $model->messageFrom;
 			$config['delay'] = $configTmp->interval_between_runs;
 			$config['atonce'] = $configTmp->send_at_once;
+			if($configTmp->atempt_count_before_stop){
+				$config['atemptCountBeforeStop'] = $configTmp->atempt_count_before_stop;
+			}
 			$config['subId'] = $model->subId;
 			$config['handlerUrl'] = $model->handleUrl;
 			try {
@@ -169,7 +172,7 @@ class MailingController extends Controller
 			->indexBy('seg_id')
 		  ->asArray()->column();
     // echo '<pre>'; exit(print_r($segments));
-		$messageSource = ['yandex'=>'yandex', 'html'=>'html'];
+		$messageSource = SpamConfiguration::getYandexEnable() ? ['yandex'=>'yandex', 'html'=>'html'] : ['html'=>'html'];
 		$model = new \app\models\SpamForm;
 				
 		return $this->render('index', compact('flag', 'model', 'segments', 'messageSource'));

@@ -42,10 +42,19 @@ class SmtpController extends Controller
      */
     public function actionIndex()
     {
+				if($limit = Yii::$app->request->post('set_limit_to_all_smtps')){
+					Smtp::setLimitToAllSmtps($limit);
+				}
         $searchModel = new SmtpSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-
-        return $this->render('index', [
+				$importSmtpForm = new \app\models\ImportSmtpForm;
+				if($importSmtpForm->load(Yii::$app->request->post())){
+					$importSmtpForm->import();
+				}elseif(Yii::$app->request->post('export_smtp')){
+					$importSmtpForm->export();
+				}
+				return $this->render('index', [
+				    'importSmtpForm' => $importSmtpForm,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);

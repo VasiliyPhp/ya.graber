@@ -19,7 +19,7 @@ class Spamer extends \yii\base\Object {
 	public $handlerUrl;
 	public $subId;
 	public $flag;
-	private $atemptCountBeforeStop = 20;
+	public $atemptCountBeforeStop = 20;
 	private $remainsAtempt;
 	function setSmtpProvider ($smtpp) {
 		$this->smtpProvider = $smtpp;

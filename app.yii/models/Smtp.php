@@ -94,6 +94,12 @@ class Smtp extends \yii\db\ActiveRecord
 			self::updateAll(['is_banned'=>0, 'ban_reason'=>''], ['<>', 'is_banned', 0]); 
 		}
 		
+		public static function setLimitToAllSmtps($limit){
+			if(!is_numeric($limit)){
+				throw new \yii\web\BadRequestHttpException('должно быть передано числовое значение');
+			}
+			self::updateAll(['smtp_limit_per_day'=>$limit]); 
+		}
 		public static function unlimit(){
 			self::updateAll(['already_sent'=>0]); 
 		}

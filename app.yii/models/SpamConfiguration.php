@@ -28,7 +28,7 @@ class SpamConfiguration extends \yii\db\ActiveRecord
     {
         return [
             [['interval_between_runs', 'send_at_once'], 'required'],
-            [['interval_between_runs', 'send_at_once'], 'integer']
+            [['enable_yandex_message_source','interval_between_runs','atempt_count_before_stop', 'send_at_once'], 'integer']
         ];
     }
 
@@ -41,6 +41,12 @@ class SpamConfiguration extends \yii\db\ActiveRecord
             'id' => 'ID',
             'interval_between_runs' => 'Интервал между отправками в МИЛИСЕКУНДАХ',
             'send_at_once' => 'Количество отправляемых писем с одного аккаунта при одном подключении',
+            'atempt_count_before_stop' => 'Количество попыток отправки перед автоматическим отключением',
+            'enable_yandex_message_source' => 'Подключить в качестве источника "yandex search results"',
         ];
     }
+		
+		public static function getYandexEnable(){
+			return static::find('id=1')->select('enable_yandex_message_source')->scalar();
+		}
 }

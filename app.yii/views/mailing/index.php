@@ -28,17 +28,23 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= $form->field($model, 'messageSubject') ?>
 		</div>
  		<div class='col-xs-6' >
-        <?= $form->field($model, 'messageTemplate')->textarea(['rows'=>10]) ?>
+        <?= $form->field($model, 'messageTemplate')->textarea(['cols'=>20]); 
+				?>
 		  <div class=help-block >Допустимо использование тега <code>%@%</code>, который будет заменен на емайл адрес пользователя</div>
-       <div class="form-group">
-            <?= Html::submitButton('Начать', ['class' => 'btn btn-primary']) ?>
-        </div>
+			<div class="form-group">
+					<?= Html::submitButton('Начать', ['class' => 'btn btn-primary']) ?>
+			</div>
 		</div>
     <?php ActiveForm::end();?>
 </div><!-- mailing-index -->
 <?php ob_start() ?>
   (function($){
-		switchSource.call($('#<?=strtolower($model->formName().'-messagesource');?>')[0], '', 0)
+		$('.btn').click(function(){
+			$('#spamform-messagetemplate').val(CKEDITOR.instances['spamform-messagetemplate'].getData())
+		})
+		CKEDITOR.replace( 'spamform-messagetemplate' );
+		$('#<?=strtolower($model->formName().'-messagetemplate');?>')[0]
+		switchSource.call($('#<?=strtolower($model->formName().'-messagesource');?>')[0], '', 0);
 		$('#<?=strtolower($model->formName().'-messagesource');?>').change(switchSource);
 		function switchSource(ev, delay){
 			('undefined' == typeof delay) && (delay = 300)
@@ -52,4 +58,5 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = ob_get_contents();
 ob_end_clean();
 $this->registerJs($js, 5);
+$this->registerJsFile(Yii::$app->homeUrl . 'js/ckeditor/ckeditor.js', ['position'=>static::POS_HEAD]);
 ?>
