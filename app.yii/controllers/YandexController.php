@@ -46,11 +46,12 @@ class YandexController extends \yii\web\Controller{
        // $passing = new Passing();
       $queryForm = new QueryForm();
 			if($queryForm->load(YII::$app->request->post()) && $queryForm->validate()){
+				session_write_close();
 				$this->grabbing($queryForm);
 				$result = ['emails'=>$this->countFoundEmails,
-				           'yandexResult'=>$this->countPagesTakenFromYandex,
-				           'viewedPages'=>$this->countViewedPages
-									 ];
+				   'yandexResult'=>$this->countPagesTakenFromYandex,
+				   'viewedPages'=>$this->countViewedPages
+				];
 			}
 			return $this->render('index',[
 											'segment'=>$segment,
@@ -262,39 +263,39 @@ class YandexController extends \yii\web\Controller{
 		$passing->segment_id = $query->segment;
 		$passing->save();
 		$this->passing = $passing;
-		
-		$userAgent = Parser::getMobileUserAgent();
-		$ip = null;
-		$links = [];
-		for($i=0; $i<$amount ; $i++){
-			$searchUrl = $this->getSearchUrl($query->query, $i);
-			$referer = $this->getSearchUrl($query->query, $i - 1);
-			$referer = $referer === $searchUrl ? null : 'http://' . $domen . $referer;
-			list($responseHeaders, $searchResult, $httpCode) = Parser::query($domen, false, $searchUrl,
-																												$referer, null, $ip, $userAgent);
-			if($httpCode != 200) {
-				if(!$try){
-					Yii::$app->session->setFlash('yandexBan', 'По каким то причинам получен бан от янлекса');
-					$this->goHome();
+		foreach(array_map('trim', explode("\n", $query->query)) as $_query){
+			$userAgent = Parser::getMobileUserAgent();
+			$ip = null;
+			$links = [];
+			for($i=0; $i<$amount ; $i++){
+				$searchUrl = $this->getSearchUrl($_query, $i);
+				$referer = $this->getSearchUrl($_query, $i - 1);
+				$referer = $referer === $searchUrl ? null : 'http://' . $domen . $referer;
+				list($responseHeaders, $searchResult, $httpCode) = Parser::query($domen, false, $searchUrl,
+																													$referer, null, $ip, $userAgent);
+				// echo $i, ' ', $amount, ' ' , $searchUrl . '<br>';
+				// ob_flush();
+				// flush();
+				if($httpCode != 200) {
+					if(!$try){
+						Yii::$app->session->setFlash('yandexBan', 'По каким то причинам получен бан от яндекса');
+						return false;
+					}
+					$userAgent = Parser::changeMobileUserAgent($userAgent);
+					$ip = Parser::changeIp();
+					$try--;
+					$i--;
+					continue;
 				}
-				$userAgent = Parser::changeMobileUserAgent($userAgent);
-				$ip = Parser::changeIp();
-				$try--;
-				$i--;
-				continue;
+				$try = 10;
+				$links = array_merge($links, $this->getLinks($searchResult));
 			}
-			$try = 10;
-			$links = array_merge($links, $this->getLinks($searchResult));
+			$query = null;
+			foreach($links as $link){
+				$this->countPagesTakenFromYandex++;
+				$this->grabPage($link, true);
+			}
 		}
-		$query = null;
-		foreach($links as $link){
-			$this->countPagesTakenFromYandex++;
-			$this->grabSite($link);
-		}
-	}
-	
-	private function grabSite($link){
-		$this->grabPage($link, true);
 	}
 	
 	private function grabPage($page, $reset = false){

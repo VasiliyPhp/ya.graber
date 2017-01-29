@@ -24,31 +24,39 @@ class ImportSmtpForm extends Model
     }
 		
 		public function export(){
-			return \app\models\Smtp::findAll()->asArray();
+			$smtps = \app\models\Smtp::find()->all();
+			$smtp_line = '';
+			foreach($smtps as $smtp){
+				// $smtp_line .= implode(' ', $smtp->attributes()) . "\r\n";
+				$smtp_line .= $smtp->smtp_user . ' ' . $smtp->smtp_pass . ' ' . $smtp->smtp_port . ' ' . $smtp->smtp_protocol . ' ' . $smtp->smtp_host . ' ' . $smtp->smtp_limit_per_day . "\r\n";
+			}
+			return $smtp_line; 
 		}
 		
-		public function import(){
-			$smtps = file($this->smtpFile->tempName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		public function import() {
+			$smtps = file ( $this->smtpFile->tempName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
 			if(!count($smtps)){
 				return false;
 			}
 			
 			$smtps = array_unique ( array_map ( 'trim', array_map ('strtolower',  $smtps ) ) );
 			
-			
 			foreach($smtps as $smtp_row){
-				$smtp_ar = explode(' ', $smtp_row);
+				$smtp_ar = explode(' ',trim($smtp_row));
 				$smtp = [
 					'smtp_user'=>$smtp_ar[0],
 					'smtp_pass'=>$smtp_ar[1],
-					'smtp_port'=>$smtp_ar[2],
+					'smtp_port'=>(int)$smtp_ar[2],
 					'smtp_protocol'=>$smtp_ar[3],
 					'smtp_host'=>$smtp_ar[4],
-					'smtp_limit'=>isset($smtp_ar[5])? $smtp[5] : 100,
+					'smtp_limit'=>isset($smtp_ar[5])? $smtp_ar[5] : 100,
+					'already_sent'=>0,
+					'is_banned'=>0,
+					'ban_reason'=>'',
 					];
 				$item = \app\models\Smtp::find()->where(['smtp_user'=>$smtp['smtp_user']])->exists();
 				if(!$item){
-				$item = new \app\models\Smtp;
+					$item = new \app\models\Smtp;
 					$item->attributes = $smtp;
 					$item->save();
 				}
