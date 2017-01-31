@@ -173,14 +173,12 @@ class Spamer extends \yii\base\Object {
 					$this->pasteUnsuscribeImage()
 						->changeLinks()
 						->shortcodes($email);
-					// exit($body);
-					$tmp
-							->setReturnPath($smtp->smtp_user)
-							->setReadReceiptTo($smtp->smtp_user)
-							->setTo($email)
-							// ->setTo('mister.sergeew-v@yandex.ru')
-							->setHtmlBody($this->body)
-							->setSubject($this->subject);
+
+					$tmp->setReturnPath($smtp->smtp_user)
+						->setReadReceiptTo($smtp->smtp_user)
+						->setTo($email)
+						->setHtmlBody($this->body)
+						->setSubject($this->subject);
 					
 					if($this->handlerUrl){
 						$tmp->setListUnsubscribe($this->getUnsubscribeUrl($email));

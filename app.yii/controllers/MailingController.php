@@ -72,12 +72,10 @@ class MailingController extends Controller
 					$signer->ignoreHeader('Return-Path');
 					$message->getSwiftMessage()->attachSigner($signer);
 				}
-				$message
-				  ->setReturnPath($model->from ? : $smtp_user)
+				$message->setReturnPath($smtp_user)
 					->setReadReceiptTo($model->from ? : $smtp_user)
 					->setTo($model->to)
 					->setFrom($model->from ? : $smtp_user)
-					// ->setTo('mister.sergeew-v@yandex.ru')
 					->setHtmlBody($model->body)
 					->setSubject($model->theme);
 				
