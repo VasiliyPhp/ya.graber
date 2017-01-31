@@ -20,7 +20,7 @@ class ImportForm extends Model
     public function rules()
     {
         return [
-    				[['segment_id', 'emailsFile'], 'required'], 
+			[['segment_id', 'emailsFile'], 'required'], 
             [['emailsFile'], 'file', 'extensions'=>'txt'], 
         ];
     }

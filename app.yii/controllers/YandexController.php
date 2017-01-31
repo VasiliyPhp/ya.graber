@@ -6,6 +6,7 @@ use app\common\parser;
 use app\models\Segment;
 use app\models\Title as Title;
 use app\models\Email;
+use app\models\Cookie;
 use app\models\Passing;
 use app\models\QueryForm;
 use yii\helpers\ArrayHelper;
@@ -39,27 +40,27 @@ class YandexController extends \yii\web\Controller{
    }
 
 	public function actionIndex(){
-      $result = false;
-			$statistics = \app\common\helper::getGraberStat();
-			$segment = new Segment();
-			$segmentItems = ArrayHelper::map(Segment::find()->all(), 'segment_id', 'segment');
-       // $passing = new Passing();
-      $queryForm = new QueryForm();
-			if($queryForm->load(YII::$app->request->post()) && $queryForm->validate()){
-				session_write_close();
-				$this->grabbing($queryForm);
-				$result = ['emails'=>$this->countFoundEmails,
-				   'yandexResult'=>$this->countPagesTakenFromYandex,
-				   'viewedPages'=>$this->countViewedPages
-				];
-			}
-			return $this->render('index',[
-											'segment'=>$segment,
-											'queryForm'=>$queryForm,
-											'segmentItems'=>$segmentItems,
-											'statistics'=>$statistics,
-											'result'=>$result
-											]);
+		$result = false;
+		$statistics = \app\common\helper::getGraberStat();
+		$segment = new Segment();
+		$segmentItems = ArrayHelper::map(Segment::find()->all(), 'segment_id', 'segment');
+		// $passing = new Passing();
+		$queryForm = new QueryForm();
+		if($queryForm->load(YII::$app->request->post()) && $queryForm->validate()){
+		session_write_close();
+		$this->grabbing($queryForm);
+		$result = ['emails'=>$this->countFoundEmails,
+		   'yandexResult'=>$this->countPagesTakenFromYandex,
+		   'viewedPages'=>$this->countViewedPages
+		];
+		}
+		return $this->render('index',[
+				'segment'=>$segment,
+				'queryForm'=>$queryForm,
+				'segmentItems'=>$segmentItems,
+				'statistics'=>$statistics,
+				'result'=>$result
+			]);
     }
 	public function actionDeleteEmail($email = null){
 		$req = yii::$app->request;
@@ -206,31 +207,41 @@ class YandexController extends \yii\web\Controller{
 	public function actionSettings(){
       $segment = new Segment();
       $title = new Title();
-			$query = new Query;
-			$segmentItems = new ArrayDataProvider([
-					'allModels' => $query
-					  ->select('segment.segment_id, count(segment.segment_id) c, concat_ws("  ", segment, count(email.email)) seg')
-						->from('segment')
-						->leftJoin('email', 'email.segment_id = segment.segment_id')
-						->groupBy('segment.segment_id')
-						->orderBy('c desc')
-						->all(),
-					'pagination' => false,
+		$query = new Query;
+		$segmentItems = new ArrayDataProvider([
+			'allModels' => $query
+				->select('segment.segment_id, count(segment.segment_id) c, concat_ws("  ", segment, count(email.email)) seg')
+				->from('segment')
+				->leftJoin('email', 'email.segment_id = segment.segment_id')
+				->groupBy('segment.segment_id')
+				->orderBy('c desc')
+				->all(),
+			'pagination' => false,
+		]);
+		$query = new Query;
+		$titleItems = new ArrayDataProvider([
+			'allModels' => $query->from('title')->all(),
+			'pagination' => false,
+		]);
+		//$titleItems = ArrayHelper::map(Title::find()->all(), 'title_id', 'title');
+		$cookie = Cookie::get();
+		return $this->render('settings',[
+				'segment'=>$segment,
+				'segmentItems'=>$segmentItems,
+				'title'=>$title,
+				'cookie'=>$cookie,
+				'titleItems'=>$titleItems
 			]);
-			$query = new Query;
-			$titleItems = new ArrayDataProvider([
-					'allModels' => $query->from('title')->all(),
-					'pagination' => false,
-			]);
-			//$titleItems = ArrayHelper::map(Title::find()->all(), 'title_id', 'title');
-     
-			return $this->render('settings',[
-											'segment'=>$segment,
-											'segmentItems'=>$segmentItems,
-											'title'=>$title,
-											'titleItems'=>$titleItems
-											]);
     }
+	
+	public function actionSaveCookie(){
+		$cookie = new Cookie();
+		if($cookie->load(Yii::$app->request->post()) && $cookie->validate()){
+			$cookie->save();
+			Yii::$app->session->setFlash('settingSuccess', 'Cookie добавлены');
+		}
+		return $this->redirect(Url::toRoute('yandex/settings'));
+	}
 	
 	public function actionSavesegment(){
 		$segment = new Segment();
@@ -274,7 +285,7 @@ class YandexController extends \yii\web\Controller{
 				$referer = $this->getSearchUrl($_query, $i - 1);
 				$referer = $referer === $searchUrl ? null : 'http://' . $domen . $referer;
 				list($responseHeaders, $searchResult, $httpCode) = Parser::curl($domen, false, $searchUrl,
-					$referer, null, $ip, $userAgent);
+					$referer, Cookie::get()->cookie, $ip, $userAgent);
 				// echo $i, ' ', $amount, ' ' , $searchUrl . '<br>';
 				// ob_flush();
 				// flush();
@@ -289,6 +300,9 @@ class YandexController extends \yii\web\Controller{
 					$try--;
 					$i--;
 					continue;
+				} elseif(preg_match('~action="/checkcaptcha"~', $searchResult)){
+					Yii::$app->session->setFlash('yandexBan', 'Необходимо скопировать куки с яндекса');
+					return false;
 				}
 				$try = 10;
 				$links = array_merge($links, $this->getLinks($searchResult));
@@ -306,7 +320,7 @@ class YandexController extends \yii\web\Controller{
 		if(in_array($page, $viewedPage)){
 			return ;
 		}
-		$this->log('мы на '.$page);
+		// $this->log('мы на '.$page);
 		$this->passing->count_page++;
 		$this->passing->save();
 		$this->countViewedPages++;
@@ -318,7 +332,7 @@ class YandexController extends \yii\web\Controller{
 		$this->findEmails($content, $page);
 		$links = $this->findLinks($content, $page);
 		if($links) {
-		  $this->log('найдено ссылок '.count($links));
+		  // $this->log('найдено ссылок '.count($links));
 			foreach($links as $link){
 				if(!in_array($link, $viewedPage)){
 					$this->grabPage($link);
@@ -365,7 +379,7 @@ class YandexController extends \yii\web\Controller{
 		} elseif ( strpos( $url, 'http://' ) !== 0 ) {
 			$url = preg_replace('~^(http.*//.*/)\S*$~', '$1'.$url ,$fullPath);
 		}
-		$this->log('нормализовано '.$url);
+		// $this->log('нормализовано '.$url);
 		return $url;
 	}
 	
@@ -373,8 +387,8 @@ class YandexController extends \yii\web\Controller{
 	private function findEmails($content, $page) {
 		preg_match_all(Parser::$emailPattern, $content, $emails);
 		$emails = array_unique($emails[0]);
-		$this->log('emails : '.count($emails));	
-		x($emails);
+		// $this->log('emails : '.count($emails));	
+		// x($emails);
 		
 		if(count($emails)){
 			foreach($emails as $email) {
@@ -383,9 +397,9 @@ class YandexController extends \yii\web\Controller{
 				}
 				if($this->saveEmail($email, $page)) {
 					$this->countFoundEmails++;
-					$this->log($email.' сохранен');
+					// $this->log($email.' сохранен');
 				} else {
-					$this->log($email.' - уже существует');
+					// $this->log($email.' - уже существует');
 				}
 			}
 		}
