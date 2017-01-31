@@ -185,7 +185,7 @@ class Spamer extends \yii\base\Object {
 						// $tmp->setXReportAbuse($this->getUnsubscribeUrl($uId));
 					
 					}
-					if($this->from){
+					if($this->from && !preg_match('~@mail.ru$~', $smtp->smtp_user)){
 						$tmp->setFrom($this->from);
 					} else {
 						$tmp->setFrom($smtp->smtp_user);
