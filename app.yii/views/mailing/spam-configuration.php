@@ -17,7 +17,7 @@ $this->title = 'Конфигурация рассылки';
         <?= $form->field($model, 'interval_between_runs') ?>
         <?= $form->field($model, 'send_at_once') ?>
         <?= $form->field($model, 'atempt_count_before_stop') ?>
-        <?= $form->field($model, 'enable_yandex_message_source') ?>
+        <?= $form->field($model, 'enable_yandex_message_source')->checkbox() ?>
     
         <div class="form-group">
             <?= Html::submitButton('Сохранить', ['class' => 'btn btn-primary']) ?>
