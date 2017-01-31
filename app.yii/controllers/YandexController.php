@@ -106,23 +106,23 @@ class YandexController extends \yii\web\Controller{
 				],
 		]);
 		return $this->render('export', [
-																'collection'=>$collection,
-															 ]
-											  );
+				'collection'=>$collection,
+			]
+		);
 	}
 	
 	private function export($sid, $format) {
 		$emails = Email::find()
-							->where(['segment_id'=>$sid])
-							->asArray()
-							->all();
+			->where(['segment_id'=>$sid])
+			->asArray()
+			->all();
 		$segment = Segment::findOne($sid);
 		$segment = $segment->segment;
 		$emails = array_map(function ($email) {
-															return $email['email'];
-														},
-													$emails
-												);
+					return $email['email'];
+				},
+			$emails
+		);
 		$method = $format.'Export';
 		if ( method_exists($this, $method) ) {
 			$filename = $segment.'.'.date('Y-m-d.H-i');
@@ -263,7 +263,9 @@ class YandexController extends \yii\web\Controller{
 		$passing->segment_id = $query->segment;
 		$passing->save();
 		$this->passing = $passing;
-		foreach(array_map('trim', explode("\n", $query->query)) as $_query){
+		$queries = array_map('trim', explode("\n", trim($query->query)));
+		// j($queries);
+		foreach($queries  as $_query){
 			$userAgent = Parser::getMobileUserAgent();
 			$ip = null;
 			$links = [];
@@ -271,11 +273,12 @@ class YandexController extends \yii\web\Controller{
 				$searchUrl = $this->getSearchUrl($_query, $i);
 				$referer = $this->getSearchUrl($_query, $i - 1);
 				$referer = $referer === $searchUrl ? null : 'http://' . $domen . $referer;
-				list($responseHeaders, $searchResult, $httpCode) = Parser::query($domen, false, $searchUrl,
-																													$referer, null, $ip, $userAgent);
+				list($responseHeaders, $searchResult, $httpCode) = Parser::curl($domen, false, $searchUrl,
+					$referer, null, $ip, $userAgent);
 				// echo $i, ' ', $amount, ' ' , $searchUrl . '<br>';
 				// ob_flush();
 				// flush();
+				// die;
 				if($httpCode != 200) {
 					if(!$try){
 						Yii::$app->session->setFlash('yandexBan', 'По каким то причинам получен бан от яндекса');
@@ -303,7 +306,7 @@ class YandexController extends \yii\web\Controller{
 		if(in_array($page, $viewedPage)){
 			return ;
 		}
-		// $this->log('мы на '.$page);
+		$this->log('мы на '.$page);
 		$this->passing->count_page++;
 		$this->passing->save();
 		$this->countViewedPages++;
@@ -315,7 +318,7 @@ class YandexController extends \yii\web\Controller{
 		$this->findEmails($content, $page);
 		$links = $this->findLinks($content, $page);
 		if($links) {
-		  // $this->log('найдено ссылок '.count($links));
+		  $this->log('найдено ссылок '.count($links));
 			foreach($links as $link){
 				if(!in_array($link, $viewedPage)){
 					$this->grabPage($link);
@@ -362,7 +365,7 @@ class YandexController extends \yii\web\Controller{
 		} elseif ( strpos( $url, 'http://' ) !== 0 ) {
 			$url = preg_replace('~^(http.*//.*/)\S*$~', '$1'.$url ,$fullPath);
 		}
-		// $this->log('нормализовано '.$url);
+		$this->log('нормализовано '.$url);
 		return $url;
 	}
 	
@@ -370,7 +373,8 @@ class YandexController extends \yii\web\Controller{
 	private function findEmails($content, $page) {
 		preg_match_all(Parser::$emailPattern, $content, $emails);
 		$emails = array_unique($emails[0]);
-		// $this->log('emails : '.count($emails));			
+		$this->log('emails : '.count($emails));	
+		x($emails);
 		
 		if(count($emails)){
 			foreach($emails as $email) {
@@ -379,9 +383,9 @@ class YandexController extends \yii\web\Controller{
 				}
 				if($this->saveEmail($email, $page)) {
 					$this->countFoundEmails++;
-					// $this->log($email.' сохранен');
+					$this->log($email.' сохранен');
 				} else {
-					// $this->log($email.' - уже существует');
+					$this->log($email.' - уже существует');
 				}
 			}
 		}
@@ -430,7 +434,7 @@ class YandexController extends \yii\web\Controller{
 	
 	private function getSearchUrl($query, $page){
 		$page = ($page > 0) ? "p={$page}&" : null;
-		$query = '/msearch?'.$page.'text='.rawurlencode($query);
+		$query = '/search/?'.$page.'text='.rawurlencode($query);
 		return $query;
 	}
 	
@@ -439,5 +443,7 @@ class YandexController extends \yii\web\Controller{
 		$t1 = (float) round($t,3);$t2=(int)floor($t);
 		$t = substr(round($t1-$t2,3),2);
 		echo '<p><pre>'.date('H:i:s.'),$t,' - '.$m.'</pre></p>';
+		ob_flush();
+		flush();
 	}
 }

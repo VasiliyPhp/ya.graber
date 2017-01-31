@@ -36,10 +36,72 @@ class Parser{
 	static function changeIp(){
 		return mt_rand(1,239).'.'.mt_rand(1,254).'.'.mt_rand(1,254).'.'.mt_rand(1,254);
 	}
- 
-  static function query($host, $data = false, $path = '/',
-											 $referer = false, $cookie = null, $ip = null,
-											 $ua = null, $is_xrv = false, $show_headers = false){
+	
+	static function curl($host, $data = false, $path = '/',
+							$referer = false, $cookie = null, $ip = null,
+							$ua = null, $is_xrv = false, $show_headers = false){
+		$headers = [];
+		$ch = curl_init();
+		if(strpos($path, '/') !== 0){
+			$path = '/' . $path;
+		}
+		
+		$host =  $host . $path;
+		
+		if(strpos($host, 'http://') !== 0 && strpos($host, 'https://') !== 0) {
+			$url = 'http://' . $host;
+		}
+		
+		curl_setopt($ch, CURLOPT_URL, $url);
+		
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); 
+		curl_setopt($ch, CURLOPT_MAXREDIRS, 5); 
+		
+		if($ua){
+			curl_setopt($ch, CURLOPT_USERAGENT, $ua);
+		}
+		if($data){
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		}
+		if($referer){
+			$headers[] = "Referer: $referer";
+		}
+		if($cookie){
+			curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+		}
+		if($ip){
+			$headers[] = "X-REAL-IP: $ip";
+		}
+		if($is_xrv){
+			$headers[] = "X-Requested-With: XMLHttpRequest";
+		}
+		
+		// curl_setopt($ch, CURLOPT_HEADER, true);
+		if(count($headers)){
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); 
+		}
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+
+		$response = curl_exec($ch);
+		
+		if (curl_errno($ch)) {
+			$response = curl_error($ch);
+			$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			$headers = '';
+		} else {
+			$headers = '';
+			$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		}
+		
+		return [$headers, $response, $code];
+		
+	}
+	
+	static function query($host, $data = false, $path = '/',
+							$referer = false, $cookie = null, $ip = null,
+							$ua = null, $is_xrv = false, $show_headers = false){
 		$user_agent = $ua ? : "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0";
 		$port = '80';
 		$last_ip = $ip ? : false;
@@ -54,12 +116,12 @@ class Parser{
 		$query.= ($last_ip)?"X-REAL-IP: ".$last_ip."\r\n":null;
 		$query.= ($referer)?"Referer: {$referer}\r\n":null;
 		$query.= "Accept: */*\r\n";
-		$query.= $data?"Content-Length: ".strlen($data)."\r\n":"";
-		$query.= $data?"Content-type: application/x-www-form-urlencoded; charset=UTF-8\r\n":"";
-		$query.= ($is_xrv)?"X-Requested-With: XMLHttpRequest\r\n":"";
+		$query.= $data?"Content-Length: ".strlen($data)."\r\n":null;
+		$query.= $data?"Content-type: application/x-www-form-urlencoded; charset=UTF-8\r\n":null;
+		$query.= ($is_xrv)?"X-Requested-With: XMLHttpRequest\r\n":null;
 		$query.= ($cookie)?"Cookie: {$cookie}\r\n":null;
 		$query.= "Connection: close\r\n\r\n";
-		$query.= $data?$data."\r\n\r\n":'';
+		$query.= $data?$data."\r\n\r\n":null;
 
 		fwrite($fp, $query);
 
