@@ -18,20 +18,20 @@ class ImportSmtpForm extends Model
     public function rules()
     {
         return [
-    				['smtpFile', 'required'], 
+    		['smtpFile', 'required'], 
             [['smtpFile'], 'file', 'extensions'=>'txt'], 
         ];
     }
 		
-		public function export(){
-			$smtps = \app\models\Smtp::find()->all();
-			$smtp_line = '';
-			foreach($smtps as $smtp){
-				// $smtp_line .= implode(' ', $smtp->attributes()) . "\r\n";
-				$smtp_line .= $smtp->smtp_user . ' ' . $smtp->smtp_pass . ' ' . $smtp->smtp_port . ' ' . $smtp->smtp_protocol . ' ' . $smtp->smtp_host . ' ' . $smtp->smtp_limit_per_day . "\r\n";
-			}
-			return $smtp_line; 
+	public function export(){
+		$smtps = \app\models\Smtp::find()->all();
+		$smtp_line = '';
+		foreach($smtps as $smtp){
+			// $smtp_line .= implode(' ', $smtp->attributes()) . "\r\n";
+			$smtp_line .= $smtp->smtp_user . ' ' . $smtp->smtp_pass . ' ' . $smtp->smtp_port . ' ' . $smtp->smtp_protocol . ' ' . $smtp->smtp_host . ' ' . $smtp->smtp_limit_per_day . "\r\n";
 		}
+		return $smtp_line; 
+	}
 		
 		public function import() {
 			$smtps = file ( $this->smtpFile->tempName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
@@ -78,7 +78,14 @@ class ImportSmtpForm extends Model
     public function attributeLabels()
     {
         return [
-						'smtpFile' => 'Выбрать файл с серверами смтп для загрузки',
+			'smtpFile' => 'Выбрать файл с серверами смтп для загрузки',
+        ];
+    }
+	
+    public function attributeHints()
+    {
+        return [
+			'smtpFile' => 'smtp_user smtp_password smtp_port smtp_ptotocol smtp_host smtp_limit',
         ];
     }
 

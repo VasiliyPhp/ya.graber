@@ -3,5 +3,5 @@ table `spam_configuration`:
 	ALTER TABLE `spam_configuration` ADD `enable_yandex_message_source` BOOLEAN NOT NULL DEFAULT FALSE ;
 	
 Синтиксис файла для импорта смтп аккаунтов
-	смтп_user smtp_password smtp_port smtp_ptotocol smtp_host smtp_limit
+	smtp_user smtp_password smtp_port smtp_ptotocol smtp_host smtp_limit
 	
