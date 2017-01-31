@@ -49,7 +49,7 @@ class ImportSmtpForm extends Model
 					'smtp_port'=>(int)$smtp_ar[2],
 					'smtp_protocol'=>$smtp_ar[3],
 					'smtp_host'=>$smtp_ar[4],
-					'smtp_limit'=>isset($smtp_ar[5])? $smtp_ar[5] : 100,
+					'smtp_limit_per_day'=>isset($smtp_ar[5])? $smtp_ar[5] : 100,
 					'already_sent'=>0,
 					'is_banned'=>0,
 					'ban_reason'=>'',
