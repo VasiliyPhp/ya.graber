@@ -35,6 +35,7 @@ $config = [
                         // it could also be any Swift_Plugins_Logger implementation (e.g., the EchoLogger)
                     ],
                 ],
+				'useFileTransport' => true,
             ],
         ],
         'log' => [

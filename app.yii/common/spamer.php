@@ -126,127 +126,126 @@ class Spamer extends \yii\base\Object {
 					throw new SpamerException('Закончился лимит отправок с доступных смтп аккаунтов полученных методом <b>SmtpProvider::next()</b>');
 				}
 				$mailerConfig = [
-						'class' => 'Swift_SmtpTransport',
-						'host' => $smtp->smtp_host,
-						'username' => $smtp->smtp_user,
-						'password' => $smtp->smtp_pass,
-						'port' => $smtp->smtp_port,
-						'encryption'=> $smtp->smtp_protocol ? : null,
-					];
-					$mailer = new \yii\swiftmailer\Mailer;
-					$transport = $mailer->createTransport($mailerConfig);
+					'class' => 'Swift_SmtpTransport',
+					'host' => $smtp->smtp_host,
+					'username' => $smtp->smtp_user,
+					'password' => $smtp->smtp_pass,
+					'port' => $smtp->smtp_port,
+					'encryption'=> $smtp->smtp_protocol ? : null,
+				];
+				$mailer = new \yii\swiftmailer\Mailer;
+				$transport = $mailer->createTransport($mailerConfig);
 			    $transport->setLocalDomain($smtp->smtp_host);
-					$mailer->setTransport($transport);
-					// $l($mailer->getTransport()); exit;
-					$limit = min($this->atonce, $remains, ($smtp->smtp_limit_per_day - $smtp->already_sent));
-					$email_array = $emailProvider->next($limit);
-					$limit = min($limit, count($email_array));
-					// $l($limit);
- 					$invalidEmails = [];
-					for($i = 0; $i < $limit; $i++){
-					  $email = $this->email = $email_array[$i]['email'];
-						if(!($message = $this->messageProvider->next())){
-							throw new \Exception('Не удалось получить сообщение из <b>MessageProvider::next()</b>');
-						}
-						if(!mt_rand(0, 30)){
-							$l(sprintf('Остываем %s секунд', self::COOL_TIME));
-							sleep(self::COOL_TIME);
-						}
-						if(!(new \yii\validators\EmailValidator())->validate($email)){
-							$l("<span style='color:red'>Некорректный емайл - $email</span>");
-							$emailProvider->deleteItemByEmail($email);
-							$invalidEmails[] = $email;
-							continue;
-						}
-						$tmp = $mailer->compose();
-						$privKeyFile = \yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp->smtp_host . '.pem';
-						$selectorFile = \yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp->smtp_host . '.key';
-						if(file_exists($privKeyFile)){
-							$privateKey = file_get_contents($privKeyFile);
-							$selector = file_get_contents($selectorFile);
-							$signer = new \Swift_Signers_DKIMSigner($privateKey, $smtp->smtp_host, $selector);
-							$signer->ignoreHeader('Return-Path');
-							$tmp->getSwiftMessage()->attachSigner($signer);
-						}
-						$this->subject = $message['subject'];
-						$this->uId = $tmp->getMessageId();
-						$this->body = $message['body'];
-						$this->pasteUnsuscribeImage()
-							->changeLinks()
-							->shortcodes($email);
-						// exit($body);
-						$tmp
-								->setReturnPath($smtp->smtp_user)
-								->setReadReceiptTo($smtp->smtp_user)
-								->setTo($email)
-								// ->setTo('mister.sergeew-v@yandex.ru')
-								->setHtmlBody($this->body)
-								->setSubject($this->subject);
-						
-						if($this->handlerUrl){
-							$tmp->setListUnsubscribe($this->getUnsubscribeUrl($email));
-							// $tmp->setXReportAbuse($this->getUnsubscribeUrl($uId));
-						
-						}
-						if($this->from){
-							$tmp->setFrom($this->from);
-						} else {
-							$tmp->setFrom($smtp->smtp_user);
-						}
-						$smtp_user = $smtp->smtp_user;
-						try{
-							$smtp->increase();
-							// j([$email, $this->emailProvider]);
-							$mailer->sendMessage($tmp, $invalidEmails);						
-							$this->logger->markAsSent($email);
-							$l("ящиков:<b> $remains</b>, <span style='color:green'>".memory_get_usage()." from: <b>$smtp_user</b>, to: <b>$email</b>, theme: <b>{$this->subject}</b></span>");
-							$this->resetAtemptCount();
-							$this->logger->increase();
-							// @unset($tmp, $mailer, $smtp, $message, $body);
-							usleep($this->delay * 1000);
-						} catch (\Swift_SwiftException $swiftTrEx){
-							$this->remainsAtempt -= 1;
-							if(!$this->remainsAtempt){
-								throw new SpamerException("Обсолютный бан после " . $this->atemptCountBeforeStop . " попыток");
-							}
-							$code = $swiftTrEx->getCode() ? : 999;
-							switch($code){
-								case 999 : ;
-								case 553 : 
-									$errmsg = 'Ошибка аутентификации'; break;
-								case 554 :
-									$errmsg = 'Отвергнуто по подозрению в спаме'; break;
-								case 450 : 
-									$errmsg = 'Закончился лимит отправок в сутки'; break;
-								case 550 :
-					    		$emailProvider->deleteItemByEmail($email);
-									$errmsg = sprintf('Hard-bounce - %s', 'ящик недоступен'); break;
-								default :
-					    		$this->logger->markAsSent($email);
-									$errmsg = $swiftTrEx->getMessage();
-							}
-							$l($this->remainsAtempt . " попыток осталось. <span style='color:red'>".memory_get_usage()." "
-									. "from: " .  $mailer->getTransport()->getExtensionHandlers()[0]->getUsername() . ", "
-									. "theme: " . $tmp->getSubject() . ", "
-									. "to: " . $email . ", "
-									. "ERROR: " .  $code . ' - ' . $errmsg . "</span>"
-								);
-							if( in_array($code,  [999, 450, 550, 553])){
-								$smtp->markAsBan($code, $errmsg);
-							}
-							else{
-								mt_rand(0, 2) or $smtp->markAsBan($code, $errmsg);
-							}
-							break;
-						}
+				$mailer->setTransport($transport);
+				$limit = min($this->atonce, $remains, ($smtp->smtp_limit_per_day - $smtp->already_sent));
+				$email_array = $emailProvider->next($limit);
+				$limit = min($limit, count($email_array));
+				// $l($limit);
+				$invalidEmails = [];
+				for($i = 0; $i < $limit; $i++){
+				  $email = $this->email = $email_array[$i]['email'];
+					if(!($message = $this->messageProvider->next())){
+						throw new \Exception('Не удалось получить сообщение из <b>MessageProvider::next()</b>');
 					}
+					if(!mt_rand(0, 30)){
+						$l(sprintf('Остываем %s секунд', self::COOL_TIME));
+						sleep(self::COOL_TIME);
+					}
+					if(!(new \yii\validators\EmailValidator())->validate($email)){
+						$l("<span style='color:red'>Некорректный емайл - $email</span>");
+						$emailProvider->deleteItemByEmail($email);
+						$invalidEmails[] = $email;
+						continue;
+					}
+					$tmp = $mailer->compose();
+					$privKeyFile = \yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp->smtp_host . '.pem';
+					$selectorFile = \yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp->smtp_host . '.key';
+					if(file_exists($privKeyFile)){
+						$privateKey = file_get_contents($privKeyFile);
+						$selector = file_get_contents($selectorFile);
+						$signer = new \Swift_Signers_DKIMSigner($privateKey, $smtp->smtp_host, $selector);
+						$signer->ignoreHeader('Return-Path');
+						$tmp->getSwiftMessage()->attachSigner($signer);
+					}
+					$this->subject = $message['subject'];
+					$this->uId = $tmp->getMessageId();
+					$this->body = $message['body'];
+					$this->pasteUnsuscribeImage()
+						->changeLinks()
+						->shortcodes($email);
+					// exit($body);
+					$tmp
+							->setReturnPath($smtp->smtp_user)
+							->setReadReceiptTo($smtp->smtp_user)
+							->setTo($email)
+							// ->setTo('mister.sergeew-v@yandex.ru')
+							->setHtmlBody($this->body)
+							->setSubject($this->subject);
 					
-					// if(count($invalidEmails)){
-						// foreach($invalidEmails as $invEm){
-							// $this->logger->markAsBad($invEm);
-						// }
-					// }
+					if($this->handlerUrl){
+						$tmp->setListUnsubscribe($this->getUnsubscribeUrl($email));
+						// $tmp->setXReportAbuse($this->getUnsubscribeUrl($uId));
+					
+					}
+					if($this->from){
+						$tmp->setFrom($this->from);
+					} else {
+						$tmp->setFrom($smtp->smtp_user);
+					}
+					$smtp_user = $smtp->smtp_user;
+					try{
+						$smtp->increase();
+						// j([$email, $this->emailProvider]);
+						$mailer->sendMessage($tmp, $invalidEmails);						
+						$this->logger->markAsSent($email);
+						$l("ящиков:<b> $remains</b>, <span style='color:green'>".memory_get_usage()." from: <b>$smtp_user</b>, to: <b>$email</b>, theme: <b>{$this->subject}</b></span>");
+						$this->resetAtemptCount();
+						$this->logger->increase();
+						// @unset($tmp, $mailer, $smtp, $message, $body);
+						usleep($this->delay * 1000);
+					} catch (\Swift_SwiftException $swiftTrEx){
+						$this->remainsAtempt -= 1;
+						if(!$this->remainsAtempt){
+							throw new SpamerException("Обсолютный бан после " . $this->atemptCountBeforeStop . " попыток");
+						}
+						$code = $swiftTrEx->getCode() ? : 999;
+						switch($code){
+							case 999 : ;
+							case 553 : 
+								$errmsg = 'Ошибка аутентификации'; break;
+							case 554 :
+								$errmsg = 'Отвергнуто по подозрению в спаме'; break;
+							case 450 : 
+								$errmsg = 'Закончился лимит отправок в сутки'; break;
+							case 550 :
+							$emailProvider->deleteItemByEmail($email);
+								$errmsg = sprintf('Hard-bounce - %s', 'ящик недоступен'); break;
+							default :
+							$this->logger->markAsSent($email);
+								$errmsg = $swiftTrEx->getMessage();
+						}
+						$l($this->remainsAtempt . " попыток осталось. <span style='color:red'>".memory_get_usage()." "
+								. "from: " .  $mailer->getTransport()->getExtensionHandlers()[0]->getUsername() . ", "
+								. "theme: " . $tmp->getSubject() . ", "
+								. "to: " . $email . ", "
+								. "ERROR: " .  $code . ' - ' . $errmsg . "</span>"
+							);
+						if( in_array($code,  [999, 450, 550, 553])){
+							$smtp->markAsBan($code, $errmsg);
+						}
+						else{
+							mt_rand(0, 2) or $smtp->markAsBan($code, $errmsg);
+						}
+						break;
+					}
 				}
+				
+				// if(count($invalidEmails)){
+					// foreach($invalidEmails as $invEm){
+						// $this->logger->markAsBad($invEm);
+					// }
+				// }
+			}
 		} catch (SpamerException $e) {
 			file_exists($this->flag) and unlink($this->flag);
 			throw new SpamerException( $e->getMessage() );

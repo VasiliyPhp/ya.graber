@@ -50,18 +50,17 @@ class MailingController extends Controller
 			$smtp = Smtp::find()->where(['smtp_id'=>$model->smtp])->asArray()->one();
 			extract($smtp);
 			$transport = [
-							 'class' => 'Swift_SmtpTransport',
-							 'host' => $smtp_host,  // e.g. smtp.mandrillapp.com or smtp.gmail.com
-							 'username' => $smtp_user,
-							 'password' => $smtp_pass,
-							 'port' => $smtp_port, // Port 25 is a very common port too
-							 'encryption' => $smtp_protocol,
+				'class' => 'Swift_SmtpTransport',
+				'host' => $smtp_host,  // e.g. smtp.mandrillapp.com or smtp.gmail.com
+				'username' => $smtp_user,
+				'password' => $smtp_pass,
+				'port' => $smtp_port, // Port 25 is a very common port too
+				'encryption' => $smtp_protocol,
 			];
 			$mailer = new \yii\swiftmailer\Mailer;
 			$transport = $mailer->createTransport($transport);
 			$transport->setLocalDomain($smtp_host);
-			// $transport->setLocalDomain('localhost');
-      $mailer->setTransport($transport);
+			$mailer->setTransport($transport);
 			try{
 				$message = $mailer->compose();
 				$privKeyFile = yii::getAlias('@app') . '/models/smtp.dkim/' . $smtp_host . '.pem';
