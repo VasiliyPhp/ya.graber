@@ -121,6 +121,7 @@ class MailingController extends Controller
 			$loger = new \app\models\SpamLaunches;
 			$configTmp = SpamConfiguration::find()->where(['id'=>$confId])->select('*')->one();
 			$config['from'] = $model->messageFrom;
+			$config['set_list_unsuscribe'] = $model->setListUnsuscribe;
 			$config['delay'] = $configTmp->interval_between_runs;
 			$config['unsubscribe_process_address'] = $configTmp->address_unsubscribe_processing;
 			$config['atonce'] = $configTmp->send_at_once;

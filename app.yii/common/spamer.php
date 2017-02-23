@@ -17,6 +17,7 @@
 		public $atonce = 5;
 		public $from;
 		public $handlerUrl;
+		public $set_list_unsuscribe;
 		public $unsubscribe_process_address;
 		public $subId;
 		public $flag;
@@ -199,7 +200,7 @@
 						->setHtmlBody($this->body)
 						->setSubject($this->subject);
 						
-						if($this->handlerUrl){
+						if($this->set_list_unsuscribe){
 							$tmp->setListUnsubscribe($this->getUnsubscribeUrl());
 							// $tmp->setXReportAbuse($this->getUnsubscribeUrl());
 							
