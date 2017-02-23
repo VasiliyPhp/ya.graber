@@ -33,7 +33,7 @@
 		?>
 		<div class=help-block >
 			<code>%a%</code> будет заменен на емайл адрес пользователя<br/>
-			<code>%unsubscribe%</code> будет заменен на ссылку отписаться. Полные текст: %unsubscribe'. Полный синтаксис code{%unsubscribe-текст ссылки-css стили%}
+			<code>%unsubscribe%</code> будет заменен на ссылку отписаться. Полный синтаксис <code>%unsubscribe-текст ссылки-css стили%</code>
 			;
 		</div>
 		<div class="form-group">
