@@ -69,7 +69,7 @@
 				if(!$unsubscribe_process_address){
 					return null;
 				}
-				echo '<pre>';print_r($item);die;
+				// echo '<pre>';print_r($item);die;
 				$text = isset($item[1]) ? $item[1] : 'Отписаться';
 				$style = isset($item[2]) ? $item[2] : null;
 				$link = '<a href="'.$unsubscribe_process_address  . '" ' . ($style ? 'style="'.$style.'" ' : '') . '>'.$text.'</a>';
@@ -190,8 +190,8 @@
 						// ->changeLinks();
 						
 						$this->shortCodes();
-						echo $this->body;
-						die;
+						// echo $this->body;
+						// die;
 						
 						$tmp->setReturnPath($smtp->smtp_user)
 						->setReadReceiptTo($smtp->smtp_user)
