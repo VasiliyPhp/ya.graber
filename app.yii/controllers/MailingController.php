@@ -74,6 +74,7 @@ class MailingController extends Controller
 				}
 				$message->setReturnPath($smtp_user)
 					->setReadReceiptTo($model->from ? : $smtp_user)
+					// ->setListUnsubscribe('http://del-from.tdom.ru?id=qwm2jfw34vw03hncftywv')
 					->setTo($model->to)
 					->setFrom($model->from ? : $smtp_user)
 					->setHtmlBody($model->body)
@@ -118,15 +119,16 @@ class MailingController extends Controller
 			$email = \app\models\Email::createProviderBySegmentId($model->segmentSource);
 			$message = $this->createMessageProvider($model);
 			$loger = new \app\models\SpamLaunches;
-			$configTmp = SpamConfiguration::find()->where(['id'=>$confId])->select('send_at_once, interval_between_runs')->one();
+			$configTmp = SpamConfiguration::find()->where(['id'=>$confId])->select('*')->one();
 			$config['from'] = $model->messageFrom;
 			$config['delay'] = $configTmp->interval_between_runs;
+			$config['unsubscribe_process_address'] = $configTmp->address_unsubscribe_processing;
 			$config['atonce'] = $configTmp->send_at_once;
 			if($configTmp->atempt_count_before_stop){
 				$config['atemptCountBeforeStop'] = $configTmp->atempt_count_before_stop;
 			}
 			$config['subId'] = $model->subId;
-			$config['handlerUrl'] = $model->handleUrl;
+			$config['handlerUrl'] = str_replace('//','/',$model->handleUrl . '/');
 			try {
 				session_write_close();
 				$spamer = new Spamer($config);

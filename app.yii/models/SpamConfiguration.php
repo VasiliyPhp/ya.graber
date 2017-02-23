@@ -28,7 +28,8 @@ class SpamConfiguration extends \yii\db\ActiveRecord
     {
         return [
             [['interval_between_runs', 'send_at_once'], 'required'],
-            [['enable_yandex_message_source','interval_between_runs','atempt_count_before_stop', 'send_at_once'], 'integer']
+            [['enable_yandex_message_source','interval_between_runs','atempt_count_before_stop', 'send_at_once'], 'integer'],
+			[['address_unsubscribe_processing'],'url'],
         ];
     }
 
@@ -42,7 +43,8 @@ class SpamConfiguration extends \yii\db\ActiveRecord
             'interval_between_runs' => 'Интервал между отправками в МИЛИСЕКУНДАХ',
             'send_at_once' => 'Количество отправляемых писем с одного аккаунта при одном подключении',
             'atempt_count_before_stop' => 'Количество попыток отправки перед автоматическим отключением',
-            'enable_yandex_message_source' => 'Подключить в качестве источника "yandex search results"',
+            'enable_yandex_message_source' => 'Подключить в качестве источника "yandex search results" (не лезть сюда!!!!)',
+            'address_unsubscribe_processing' => 'Url адрес для обработки отписок (не лезть сюда!!!!)',
         ];
     }
 		
