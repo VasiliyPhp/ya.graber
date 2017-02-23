@@ -32,7 +32,7 @@
         <?= $form->field($model, 'messageTemplate')->textarea(['cols'=>20]); 
 		?>
 		<div class=help-block >
-			<code>%@%</code> будет заменен на емайл адрес пользователя<br/>
+			<code>%a%</code> будет заменен на емайл адрес пользователя<br/>
 			<code>%unsubscribe%</code> будет заменен на ссылку отписаться. Полные текст: %unsubscribe'. Полный синтаксис code{%unsubscribe-текст ссылки-css стили%}
 			;
 		</div>

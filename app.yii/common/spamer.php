@@ -65,10 +65,11 @@
 			$unsubscribe_process_address = $this->unsubscribe_process_address ? $this->unsubscribe_process_address . $urlParams : null;
 			$this->body = str_replace('%a%', $email, $this->body);
 			$this->body = str_replace('%img%', $this->getUnsubscribeImg(), $this->body);
-			$this->body = preg_replace_callback('~%unsubscribe(?:-([^-%]+))?(?:-([^-%]+))?%~Uu', function($item) use ($unsubscribe_process_address) {
+			$this->body = preg_replace_callback('~%unsubscribe(?:-([^-%]+))?(?:-([^-%]+))?%~', function($item) use ($unsubscribe_process_address) {
 				if(!$unsubscribe_process_address){
 					return null;
 				}
+				echo '<pre>';print_r($item);die;
 				$text = isset($item[1]) ? $item[1] : 'Отписаться';
 				$style = isset($item[2]) ? $item[2] : null;
 				$link = '<a href="'.$unsubscribe_process_address  . '" ' . ($style ? 'style="'.$style.'" ' : '') . '>'.$text.'</a>';
@@ -189,8 +190,8 @@
 						// ->changeLinks();
 						
 						$this->shortCodes();
-						// echo $this->body;
-						// die;
+						echo $this->body;
+						die;
 						
 						$tmp->setReturnPath($smtp->smtp_user)
 						->setReadReceiptTo($smtp->smtp_user)
